@@ -1,8 +1,8 @@
 {
-  "name": "matecat/emoji-parser",
+  "name": "matecat/xml-dom-content-loader",
   "type": "library",
-  "description": "Matecat Emoji Parser component",
-  "keywords": ["xml", "php"],
+  "description": "Matecat XML DomDocument Loader component",
+  "keywords": ["xml", "Dom","php"],
   "homepage": "https://github.com/matecat/xml-parser",
   "license": "MIT",
   "support": {
