@@ -1,0 +1,40 @@
+{
+  "name": "matecat/emoji-parser",
+  "type": "library",
+  "description": "Matecat Emoji Parser component",
+  "keywords": ["xml", "php"],
+  "homepage": "https://github.com/matecat/xml-parser",
+  "license": "MIT",
+  "support": {
+    "issues": "https://github.com/matecat/xml-parser/issues"
+  },
+  "authors": [
+    {
+      "name": "Mauro Cassani",
+      "email": "maurocassani1978@gmail.com",
+      "homepage": "https://github.com/mauretto78"
+    },
+    {
+      "name": "Domenico Lupinetti",
+      "email": "ostico@gmail.com",
+      "homepage": "https://github.com/ostico"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Matecat\\XmlParser\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": { "Matecat\\XmlParser\\Tests\\": "tests/" }
+  },
+  "require": {
+    "php": ">=5.6",
+    "ext-dom": "*",
+    "ext-xml": "*",
+    "ext-libxml": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^5.7.27"
+  }
+}
