@@ -1,12 +1,12 @@
 {
-  "name": "matecat/xml-dom-content-loader",
+  "name": "matecat/xml-dom-parser",
   "type": "library",
   "description": "Matecat XML DomDocument Loader component",
   "keywords": ["xml", "Dom","php"],
-  "homepage": "https://github.com/matecat/xml-parser",
+  "homepage": "https://github.com/matecat/xml-dom-parser",
   "license": "MIT",
   "support": {
-    "issues": "https://github.com/matecat/xml-parser/issues"
+    "issues": "https://github.com/matecat/xml-dom-parser/issues"
   },
   "authors": [
     {
