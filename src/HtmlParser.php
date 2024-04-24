@@ -9,25 +9,26 @@
 
 namespace Matecat\XmlParser;
 
-use DOMNodeList;
+use ArrayObject;
 use DOMXPath;
 
-class XmlParser extends AbstractParser {
+class HtmlParser extends AbstractParser {
 
     /**
-     * @return DOMNodeList
+     * @return ArrayObject
      */
-    protected function getNodeListFromQueryPath(){
+    protected function getNodeListFromQueryPath() {
 
         $xpath = new DOMXPath( $this->dom );
 
         if ( $this->isXmlFragment ) {
-            $xmlNodeList = $xpath->query( "/" . self::fragmentDocumentRoot );
+            $htmlNodeList = $xpath->query( "/" . self::fragmentDocumentRoot );
         } else {
-            $xmlNodeList = $xpath->query( "*" );
+            $htmlNodeList = $xpath->query( "/html" );
         }
 
-        return $xmlNodeList;
+        return $htmlNodeList;
+
     }
 
 }
