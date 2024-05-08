@@ -22,8 +22,8 @@ use Matecat\XmlParser\Exception\XmlParsingException;
 abstract class AbstractParser {
 
     const fragmentDocumentRoot = '_____root';
-    const regexpEntity = '/&#x([0-1]{0,1}[0-9A-F]{1,2})/u'; //&#x1E;  &#xE;
-    const regexpAscii  = '/([\x{00}-\x{1F}\x{7F}]{1})/u';
+    const regexpEntity         = '/&#x([0-1]{0,1}[0-9A-F]{1,2})/u'; //&#x1E;  &#xE;
+    const regexpAscii          = '/([\x{00}-\x{1F}\x{7F}]{1})/u';
     protected static $asciiPlaceHoldMap = [
             '00' => [ 'symbol' => 'NULL', 'placeHold' => '', 'numeral' => 0x00 ],
             '01' => [ 'symbol' => 'SOH', 'placeHold' => '', 'numeral' => 0x01 ],
@@ -79,8 +79,13 @@ abstract class AbstractParser {
     protected function __construct( $html, $isXmlFragment ) {
         $html                = $this->removeNotPrintableChars( $html );
         $this->isXmlFragment = $isXmlFragment;
-        $this->dom           = XmlDomLoader::load( $html, true, ( $isXmlFragment ? self::fragmentDocumentRoot : null ) );
-        $this->elements      = new ArrayObject();
+
+        $config                    = new Config();
+        $config->allowDocumentType = true;
+        $config->setRootElement    = ( $isXmlFragment ? self::fragmentDocumentRoot : null );
+
+        $this->dom      = XmlDomLoader::load( $html, $config );
+        $this->elements = new ArrayObject();
     }
 
     /**
@@ -165,7 +170,7 @@ abstract class AbstractParser {
                     'node'         => $this->dom->saveXML( $element ),
                     'tagName'      => $element->nodeName,
                     'attributes'   => $this->getAttributes( $element ),
-                    'text'         => ( $element instanceof DOMText ? $element->textContent : null ),
+                    'text'         => ( $element instanceof DOMText ) ? $element->textContent : null,
                     'self_closed'  => ( $element instanceof DOMText ) ? null : !$element->hasChildNodes(),
                     'has_children' => ( $element instanceof DOMText ) ? null : $element->hasChildNodes(),
                     'inner_html'   => $element->hasChildNodes() ? $this->mapElements( $element->childNodes, new ArrayObject() ) : new ArrayObject()
@@ -219,6 +224,7 @@ abstract class AbstractParser {
         } else {
             $this->mapElements( $htmlNodeList, $this->elements );
         }
+
         return $this->elements;
 
     }

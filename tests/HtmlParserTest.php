@@ -29,6 +29,12 @@ class HtmlParserTest extends TestCase {
         $this->assertCount( 4, $parsed[ 0 ]->inner_html[ 0 ]->inner_html );
         $this->assertCount( 1, $parsed[ 0 ]->inner_html[ 1 ]->inner_html );
         $this->assertCount( 5, $parsed[ 0 ]->inner_html[ 1 ]->inner_html[ 0 ]->inner_html );
+
+        $this->assertEquals(
+                '<div>                Every not closed tag will be exluded (like <x id="123"/> and <br/>)            </div>',
+                $parsed[ 0 ]->inner_html[ 1 ]->inner_html[ 0 ]->inner_html[ 2 ]->node
+        );
+
     }
 
     /**

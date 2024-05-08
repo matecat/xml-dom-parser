@@ -25,19 +25,21 @@ class XmlDomLoader {
     /**
      * Parses an XML string.
      *
-     * @param string               $content          An XML string
-     * @param bool                 $allowDocumentType
-     * @param string|null          $setRootElement
-     * @param string|callable|null $schemaOrCallable An XSD schema file path, a callable, or null to disable validation
+     * @param string      $content An XML string
+     * @param Config|null $config
      *
      * @return DOMDocument
      *
      * @throws InvalidXmlException When parsing of XML with schema or callable produces any errors unrelated to the XML parsing itself
      * @throws XmlParsingException When parsing of XML file returns error
      */
-    public static function load( $content, $allowDocumentType = false, $setRootElement = null, $schemaOrCallable = null ) {
+    public static function load( $content, Config $config = null ) {
         if ( !extension_loaded( 'dom' ) ) {
             throw new RuntimeException( 'Extension DOM is required.' );
+        }
+
+        if ( is_null( $config ) ) {
+            $config = new Config();
         }
 
         $internalErrors  = libxml_use_internal_errors( true );
@@ -47,11 +49,11 @@ class XmlDomLoader {
         $dom                  = new DOMDocument( '1.0', 'UTF-8' );
         $dom->validateOnParse = true;
 
-        if ( is_string( $setRootElement ) && !empty( $setRootElement ) ) {
-            $content = "<$setRootElement>$content</$setRootElement>";
+        if ( is_string( $config->setRootElement ) && !empty( $config->setRootElement ) ) {
+            $content = "<$config->setRootElement>$content</$config->setRootElement>";
         }
 
-        $res = $dom->loadXML( $content, LIBXML_NONET | LIBXML_NOBLANKS | ( defined( 'LIBXML_COMPACT' ) ? LIBXML_COMPACT : 0 ) );
+        $res = $dom->loadXML( $content, $config->XML_OPTIONS );
 
         if ( !$res ) {
             libxml_disable_entity_loader( $disableEntities );
@@ -65,24 +67,24 @@ class XmlDomLoader {
         libxml_disable_entity_loader( $disableEntities );
 
         foreach ( $dom->childNodes as $child ) {
-            if ( XML_DOCUMENT_TYPE_NODE === $child->nodeType && !$allowDocumentType ) {
+            if ( XML_DOCUMENT_TYPE_NODE === $child->nodeType && !$config->allowDocumentType ) {
                 throw new XmlParsingException( 'Document types are not allowed.' );
             }
         }
 
-        if ( null !== $schemaOrCallable ) {
+        if ( null !== $config->schemaOrCallable ) {
             $internalErrors = libxml_use_internal_errors( true );
             libxml_clear_errors();
 
             $e = null;
-            if ( is_callable( $schemaOrCallable ) ) {
+            if ( is_callable( $config->schemaOrCallable ) ) {
                 try {
-                    $valid = call_user_func( $schemaOrCallable, $dom, $internalErrors );
+                    $valid = call_user_func( $config->schemaOrCallable, $dom, $internalErrors );
                 } catch ( Exception $e ) {
                     $valid = false;
                 }
-            } elseif ( !is_array( $schemaOrCallable ) && is_file( (string)$schemaOrCallable ) ) {
-                $schemaSource = file_get_contents( (string)$schemaOrCallable );
+            } elseif ( !is_array( $config->schemaOrCallable ) && is_file( (string)$config->schemaOrCallable ) ) {
+                $schemaSource = file_get_contents( (string)$config->schemaOrCallable );
                 $valid        = @$dom->schemaValidateSource( $schemaSource );
             } else {
                 libxml_use_internal_errors( $internalErrors );
