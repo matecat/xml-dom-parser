@@ -9,10 +9,32 @@
 
 namespace Matecat\XmlParser;
 
+use ArrayObject;
+use DOMException;
 use DOMNodeList;
 use DOMXPath;
+use Matecat\XmlParser\Exception\InvalidXmlException;
+use Matecat\XmlParser\Exception\XmlParsingException;
 
 class XmlParser extends AbstractParser {
+
+    /**
+     * This solution is taken from here and then modified:
+     * https://www.php.net/manual/fr/regexp.reference.recursive.php#95568
+     *
+     * @param string $xml
+     * @param bool   $isXmlFragment
+     *
+     * @return ArrayObject
+     * @throws DOMException
+     * @throws InvalidXmlException
+     * @throws XmlParsingException
+     */
+    public static function parse( $xml, $isXmlFragment = false ) {
+        $parser = new static( $xml, $isXmlFragment );
+
+        return $parser->extractNodes();
+    }
 
     /**
      * @return DOMNodeList

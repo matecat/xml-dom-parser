@@ -76,38 +76,20 @@ abstract class AbstractParser {
      * @throws InvalidXmlException
      * @throws XmlParsingException
      */
-    protected function __construct( $html, $isXmlFragment ) {
-        $html                = $this->removeNotPrintableChars( $html );
+    protected function __construct( $xml, $isXmlFragment, $isHtml = false ) {
+        $xml                 = $this->removeNotPrintableChars( $xml );
         $this->isXmlFragment = $isXmlFragment;
 
         $this->dom = XmlDomLoader::load(
-                $html,
+                $xml,
                 new Config(
                         ( $isXmlFragment ? self::fragmentDocumentRoot : null ),
-                        true,
+                        $isHtml,
                         LIBXML_NONET | LIBXML_NOBLANKS
                 )
         );
 
         $this->elements = new ArrayObject();
-    }
-
-    /**
-     * This solution is taken from here and then modified:
-     * https://www.php.net/manual/fr/regexp.reference.recursive.php#95568
-     *
-     * @param string $html
-     * @param bool   $isXmlFragment
-     *
-     * @return ArrayObject
-     * @throws DOMException
-     * @throws InvalidXmlException
-     * @throws XmlParsingException
-     */
-    public static function parse( $html, $isXmlFragment = false ) {
-        $parser = new static( $html, $isXmlFragment );
-
-        return $parser->extractNodes();
     }
 
     /**
