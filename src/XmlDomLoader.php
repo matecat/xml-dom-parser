@@ -49,11 +49,11 @@ class XmlDomLoader {
         $dom                  = new DOMDocument( '1.0', 'UTF-8' );
         $dom->validateOnParse = true;
 
-        if ( is_string( $config->setRootElement ) && !empty( $config->setRootElement ) ) {
-            $content = "<$config->setRootElement>$content</$config->setRootElement>";
+        if ( is_string( $config->getSetRootElement() ) && !empty( $config->getSetRootElement() ) ) {
+            $content = "<{$config->getSetRootElement()}>$content</{$config->getSetRootElement()}>";
         }
 
-        $res = $dom->loadXML( $content, $config->XML_OPTIONS );
+        $res = $dom->loadXML( $content, $config->getXML_OPTIONS() );
 
         if ( !$res ) {
             libxml_disable_entity_loader( $disableEntities );
@@ -67,24 +67,24 @@ class XmlDomLoader {
         libxml_disable_entity_loader( $disableEntities );
 
         foreach ( $dom->childNodes as $child ) {
-            if ( XML_DOCUMENT_TYPE_NODE === $child->nodeType && !$config->allowDocumentType ) {
+            if ( XML_DOCUMENT_TYPE_NODE === $child->nodeType && !$config->getAllowDocumentType() ) {
                 throw new XmlParsingException( 'Document types are not allowed.' );
             }
         }
 
-        if ( null !== $config->schemaOrCallable ) {
+        if ( null !== $config->getSchemaOrCallable() ) {
             $internalErrors = libxml_use_internal_errors( true );
             libxml_clear_errors();
 
             $e = null;
-            if ( is_callable( $config->schemaOrCallable ) ) {
+            if ( is_callable( $config->getSchemaOrCallable() ) ) {
                 try {
-                    $valid = call_user_func( $config->schemaOrCallable, $dom, $internalErrors );
+                    $valid = call_user_func( $config->getSchemaOrCallable(), $dom, $internalErrors );
                 } catch ( Exception $e ) {
                     $valid = false;
                 }
-            } elseif ( !is_array( $config->schemaOrCallable ) && is_file( (string)$config->schemaOrCallable ) ) {
-                $schemaSource = file_get_contents( (string)$config->schemaOrCallable );
+            } elseif ( !is_array( $config->getSchemaOrCallable() ) && is_file( (string)$config->getSchemaOrCallable() ) ) {
+                $schemaSource = file_get_contents( (string)$config->getSchemaOrCallable() );
                 $valid        = @$dom->schemaValidateSource( $schemaSource );
             } else {
                 libxml_use_internal_errors( $internalErrors );

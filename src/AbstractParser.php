@@ -80,11 +80,15 @@ abstract class AbstractParser {
         $html                = $this->removeNotPrintableChars( $html );
         $this->isXmlFragment = $isXmlFragment;
 
-        $config                    = new Config();
-        $config->allowDocumentType = true;
-        $config->setRootElement    = ( $isXmlFragment ? self::fragmentDocumentRoot : null );
+        $this->dom = XmlDomLoader::load(
+                $html,
+                new Config(
+                        ( $isXmlFragment ? self::fragmentDocumentRoot : null ),
+                        true,
+                        LIBXML_NONET | LIBXML_NOBLANKS
+                )
+        );
 
-        $this->dom      = XmlDomLoader::load( $html, $config );
         $this->elements = new ArrayObject();
     }
 
