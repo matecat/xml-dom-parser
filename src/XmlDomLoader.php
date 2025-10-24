@@ -14,6 +14,7 @@ use Exception;
 use Matecat\XmlParser\Exception\InvalidXmlException;
 use Matecat\XmlParser\Exception\XmlParsingException;
 use RuntimeException;
+use const PHP_VERSION_ID;
 
 /**
  * This class is copied from Symfony\Component\Config\Util\XmlUtils:
@@ -43,7 +44,12 @@ class XmlDomLoader {
         }
 
         $internalErrors  = libxml_use_internal_errors( true );
-        $disableEntities = libxml_disable_entity_loader();
+
+        $disableEntities = true;
+        if ( PHP_VERSION_ID < 80000) {
+            $disableEntities = libxml_disable_entity_loader();
+        }
+
         libxml_clear_errors();
 
         $dom                  = new DOMDocument( '1.0', 'UTF-8' );
@@ -56,7 +62,10 @@ class XmlDomLoader {
         $res = $dom->loadXML( $content, $config->getXML_OPTIONS() );
 
         if ( !$res ) {
-            libxml_disable_entity_loader( $disableEntities );
+
+            if ( PHP_VERSION_ID < 80000) {
+                libxml_disable_entity_loader($disableEntities);
+            }
 
             throw new XmlParsingException( implode( "\n", static::getXmlErrors( $internalErrors ) ) );
         }
