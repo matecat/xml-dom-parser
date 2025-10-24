@@ -44,12 +44,6 @@ class XmlDomLoader {
         }
 
         $internalErrors  = libxml_use_internal_errors( true );
-
-        $disableEntities = true;
-        if ( PHP_VERSION_ID < 80000) {
-            $disableEntities = libxml_disable_entity_loader();
-        }
-
         libxml_clear_errors();
 
         $dom                  = new DOMDocument( '1.0', 'UTF-8' );
@@ -62,18 +56,12 @@ class XmlDomLoader {
         $res = $dom->loadXML( $content, $config->getXML_OPTIONS() );
 
         if ( !$res ) {
-
-            if ( PHP_VERSION_ID < 80000) {
-                libxml_disable_entity_loader($disableEntities);
-            }
-
             throw new XmlParsingException( implode( "\n", static::getXmlErrors( $internalErrors ) ) );
         }
 
         $dom->normalizeDocument();
 
         libxml_use_internal_errors( $internalErrors );
-        libxml_disable_entity_loader( $disableEntities );
 
         foreach ( $dom->childNodes as $child ) {
             if ( XML_DOCUMENT_TYPE_NODE === $child->nodeType && !$config->getAllowDocumentType() ) {
