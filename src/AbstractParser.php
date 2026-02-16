@@ -24,9 +24,9 @@ use stdClass;
 
 abstract class AbstractParser {
 
-    public const string fragmentDocumentRoot = '_____root';
-    public const string regexpEntity         = '/&#x([0-1]{0,1}[0-9A-F]{1,2})/u'; //&#x1E;  &#xE;
-    public const string regexpAscii          = '/([\x{00}-\x{1F}\x{7F}])/u';
+    public const string FRAGMENT_DOCUMENT_ROOT = '_____root';
+    public const string REGEXP_ENTITIES         = '/&#x([0-1]{0,1}[0-9A-F]{1,2})/u'; //&#x1E;  &#xE;
+    public const string REGEXP_ASCII          = '/([\x{00}-\x{1F}\x{7F}])/u';
 
     /** @var array<string, array{symbol: string, placeHold: string, numeral: int}> */
     protected static array $asciiPlaceHoldMap = [
@@ -85,7 +85,7 @@ abstract class AbstractParser {
         $this->dom = XmlDomLoader::load(
                 $xml,
                 new Config(
-                        ( $isXmlFragment ? self::fragmentDocumentRoot : null ),
+                        ( $isXmlFragment ? self::FRAGMENT_DOCUMENT_ROOT : null ),
                         $isHtml,
                         LIBXML_NONET | LIBXML_NOBLANKS
                 )
@@ -100,7 +100,7 @@ abstract class AbstractParser {
      */
     protected function removeNotPrintableChars( string $seg ): string {
 
-        preg_match_all( self::regexpAscii, $seg, $matches );
+        preg_match_all( self::REGEXP_ASCII, $seg, $matches );
 
         if ( !empty( $matches[ 1 ] ) ) {
             $test_src = $seg;
@@ -113,7 +113,7 @@ abstract class AbstractParser {
             $seg = $test_src;
         }
 
-        preg_match_all( self::regexpEntity, $seg, $matches );
+        preg_match_all( self::REGEXP_ENTITIES, $seg, $matches );
 
         if ( !empty( $matches[ 1 ] ) ) {
             $test_src = $seg;
@@ -206,7 +206,7 @@ abstract class AbstractParser {
         }
 
         $firstNode = $htmlNodeList->item( 0 );
-        if ( $this->isXmlFragment && $firstNode !== null && $firstNode->nodeName == self::fragmentDocumentRoot ) {
+        if ( $this->isXmlFragment && $firstNode !== null && $firstNode->nodeName == self::FRAGMENT_DOCUMENT_ROOT ) {
             // there is a fake root node, skip the first element end start with child nodes
             $this->mapElements( $firstNode->childNodes, $this->elements );
         } else {

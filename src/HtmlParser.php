@@ -48,7 +48,7 @@ final class HtmlParser extends AbstractParser
         $xpath = new DOMXPath($this->dom);
 
         if ($this->isXmlFragment) {
-            $htmlNodeList = $xpath->query("/" . self::fragmentDocumentRoot);
+            $htmlNodeList = $xpath->query("/" . self::FRAGMENT_DOCUMENT_ROOT);
         } else {
             $htmlNodeList = $xpath->query("/html");
         }

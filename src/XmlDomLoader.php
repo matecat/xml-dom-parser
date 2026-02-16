@@ -13,9 +13,9 @@ namespace Matecat\XmlParser;
 
 use DOMDocument;
 use Exception;
+use Matecat\XmlParser\Exception\DomDependecyMissingException;
 use Matecat\XmlParser\Exception\InvalidXmlException;
 use Matecat\XmlParser\Exception\XmlParsingException;
-use RuntimeException;
 
 /**
  * This class is copied from Symfony\Component\Config\Util\XmlUtils:
@@ -37,24 +37,41 @@ final class XmlDomLoader {
      */
     public static function load( string $content, ?Config $config = null ): DOMDocument {
         if ( !extension_loaded( 'dom' ) ) {
-            throw new RuntimeException( 'Extension DOM is required.' ); // @codeCoverageIgnore
+            throw new DomDependecyMissingException( 'Extension DOM is required.' ); // @codeCoverageIgnore
         }
 
-        if ( is_null( $config ) ) {
-            $config = new Config();
-        }
+        $config = $config ?? new Config();
 
-        $internalErrors  = libxml_use_internal_errors( true );
+        $internalErrors = libxml_use_internal_errors( true );
         libxml_clear_errors();
 
+        $dom = self::createDomDocument( $content, $config );
+
+        libxml_use_internal_errors( $internalErrors );
+
+        self::validateDocumentType( $dom, $config );
+        self::validateWithSchema( $dom, $config );
+
+        libxml_clear_errors();
+
+        return $dom;
+    }
+
+    /**
+     * Creates and loads the DOMDocument from content.
+     *
+     * @throws XmlParsingException
+     */
+    private static function createDomDocument( string $content, Config $config ): DOMDocument {
         $dom                  = new DOMDocument( '1.0', 'UTF-8' );
         $dom->validateOnParse = true;
 
-        if ( is_string( $config->getSetRootElement() ) && !empty( $config->getSetRootElement() ) ) {
+        if ( !empty( $config->getSetRootElement() ) ) {
             $content = "<{$config->getSetRootElement()}>$content</{$config->getSetRootElement()}>";
         }
 
-        $res = $dom->loadXML( $content, $config->getXML_OPTIONS() );
+        $internalErrors = libxml_use_internal_errors( true );
+        $res            = $dom->loadXML( $content, $config->getXmlOptions() );
 
         if ( !$res ) {
             throw new XmlParsingException( implode( "\n", self::getXmlErrors( $internalErrors ) ) );
@@ -62,53 +79,112 @@ final class XmlDomLoader {
 
         $dom->normalizeDocument();
 
-        libxml_use_internal_errors( $internalErrors );
+        return $dom;
+    }
+
+    /**
+     * Validates that the document doesn't contain a DOCTYPE when not allowed.
+     *
+     * @throws XmlParsingException
+     */
+    private static function validateDocumentType( DOMDocument $dom, Config $config ): void {
+        if ( $config->getAllowDocumentType() ) {
+            return;
+        }
 
         foreach ( $dom->childNodes as $child ) {
-            if ( XML_DOCUMENT_TYPE_NODE === $child->nodeType && !$config->getAllowDocumentType() ) {
+            if ( XML_DOCUMENT_TYPE_NODE === $child->nodeType ) {
                 throw new XmlParsingException( 'Document types are not allowed.' );
             }
         }
+    }
 
-        if ( null !== $config->getSchemaOrCallable() ) {
-            $internalErrors = libxml_use_internal_errors( true );
-            libxml_clear_errors();
+    /**
+     * Validates the document with schema or callable if configured.
+     *
+     * @throws InvalidXmlException
+     * @throws XmlParsingException
+     */
+    private static function validateWithSchema( DOMDocument $dom, Config $config ): void {
+        $schemaOrCallable = $config->getSchemaOrCallable();
 
-            $e = null;
-            if ( is_callable( $config->getSchemaOrCallable() ) ) {
-                try {
-                    $valid = call_user_func( $config->getSchemaOrCallable(), $dom, $internalErrors );
-                } catch ( Exception $e ) {
-                    $valid = false;
-                }
-            } elseif ( is_file( $config->getSchemaOrCallable() ) ) {
-                $schemaSource = file_get_contents( $config->getSchemaOrCallable() );
-                // @codeCoverageIgnoreStart
-                if ( $schemaSource === false ) {
-                    libxml_use_internal_errors( $internalErrors );
-                    throw new XmlParsingException( 'Could not read schema file.' );
-                }
-                // @codeCoverageIgnoreEnd
-                $valid = @$dom->schemaValidateSource( $schemaSource );
-            } else {
-                libxml_use_internal_errors( $internalErrors );
-
-                throw new XmlParsingException( 'The schemaOrCallable argument has to be a valid path to XSD file or callable.' );
-            }
-
-            if ( !$valid ) {
-                $messages = self::getXmlErrors( $internalErrors );
-                if ( empty( $messages ) ) {
-                    throw new InvalidXmlException( 'The XML is not valid.', 0, $e );
-                }
-                throw new XmlParsingException( implode( "\n", $messages ), 0, $e );
-            }
+        if ( $schemaOrCallable === null ) {
+            return;
         }
 
+        $internalErrors = libxml_use_internal_errors( true );
         libxml_clear_errors();
-        libxml_use_internal_errors( $internalErrors );
 
-        return $dom;
+        $validationResult = self::performValidation( $dom, $schemaOrCallable, $internalErrors );
+
+        if ( !$validationResult->isValid ) {
+            self::handleValidationFailure( $internalErrors, $validationResult->exception );
+        }
+    }
+
+    /**
+     * Performs the actual validation using a callable or schema file.
+     *
+     * @throws XmlParsingException
+     */
+    private static function performValidation( DOMDocument $dom, callable|string $schemaOrCallable, bool $internalErrors ): ValidationResult {
+        if ( is_callable( $schemaOrCallable ) ) {
+            return self::validateWithCallable( $dom, $schemaOrCallable, $internalErrors );
+        }
+
+        if ( is_file( $schemaOrCallable ) ) {
+            return self::validateWithSchemaFile( $dom, $schemaOrCallable, $internalErrors );
+        }
+
+        libxml_use_internal_errors( $internalErrors );
+        throw new XmlParsingException( 'The schemaOrCallable argument has to be a valid path to XSD file or callable.' );
+    }
+
+    /**
+     * Validates using a callable.
+     */
+    private static function validateWithCallable( DOMDocument $dom, callable $callable, bool $internalErrors ): ValidationResult {
+        try {
+            $valid = call_user_func( $callable, $dom, $internalErrors );
+            return new ValidationResult( (bool)$valid, null );
+        } catch ( Exception $e ) {
+            return new ValidationResult( false, $e );
+        }
+    }
+
+    /**
+     * Validates using an XSD schema file.
+     *
+     * @throws XmlParsingException
+     */
+    private static function validateWithSchemaFile( DOMDocument $dom, string $schemaFile, bool $internalErrors ): ValidationResult {
+        $schemaSource = file_get_contents( $schemaFile );
+
+        // @codeCoverageIgnoreStart
+        if ( $schemaSource === false ) {
+            libxml_use_internal_errors( $internalErrors );
+            throw new XmlParsingException( 'Could not read schema file.' );
+        }
+        // @codeCoverageIgnoreEnd
+
+        $valid = @$dom->schemaValidateSource( $schemaSource );
+        return new ValidationResult( $valid, null );
+    }
+
+    /**
+     * Handles validation failure by throwing an appropriate exception.
+     *
+     * @throws InvalidXmlException
+     * @throws XmlParsingException
+     */
+    private static function handleValidationFailure( bool $internalErrors, ?Exception $exception ): void {
+        $messages = self::getXmlErrors( $internalErrors );
+
+        if ( empty( $messages ) ) {
+            throw new InvalidXmlException( 'The XML is not valid.', 0, $exception );
+        }
+
+        throw new XmlParsingException( implode( "\n", $messages ), 0, $exception );
     }
 
     /**

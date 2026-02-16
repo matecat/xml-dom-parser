@@ -232,11 +232,11 @@ class XmlLoaderTest extends Base
             $xmlFragment = '<item>Test</item><item>Test2</item>';
             $config = new Config('root', false);
             $dom = XmlDomLoader::load($xmlFragment, $config);
-
-            $this->assertEquals(2, $dom->getElementsByTagName('item')->length);
         } catch (Exception) {
             $this->fail('Validation failed');
         }
+        
+        $this->assertEquals(2, $dom->getElementsByTagName('item')->length);
     }
 
 }

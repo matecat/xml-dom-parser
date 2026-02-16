@@ -21,15 +21,15 @@ readonly class Config {
     protected bool $allowDocumentType;
     protected ?string $setRootElement;
     protected Closure|string|null $schemaOrCallable;
-    protected int $XML_OPTIONS;
+    protected int $xmlOptions;
 
     public function __construct(
         ?string $setRootElement = null,
         bool $allowDocumentType = false,
-        int $XML_OPTIONS = 0,
+        int $xmlOptions = 0,
         Closure|string|null $schemaOrCallable = null
     ) {
-        $this->XML_OPTIONS       = $XML_OPTIONS | ( defined( 'LIBXML_COMPACT' ) ? LIBXML_COMPACT : 0 );
+        $this->xmlOptions       = $xmlOptions | ( defined( 'LIBXML_COMPACT' ) ? LIBXML_COMPACT : 0 );
         $this->setRootElement    = $setRootElement;
         $this->allowDocumentType = $allowDocumentType;
         $this->schemaOrCallable  = $schemaOrCallable;
@@ -47,8 +47,8 @@ readonly class Config {
         return $this->schemaOrCallable;
     }
 
-    public function getXML_OPTIONS(): int {
-        return $this->XML_OPTIONS;
+    public function getXmlOptions(): int {
+        return $this->xmlOptions;
     }
 
 }

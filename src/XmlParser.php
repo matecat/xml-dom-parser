@@ -46,7 +46,7 @@ final class XmlParser extends AbstractParser {
         $xpath = new DOMXPath( $this->dom );
 
         if ( $this->isXmlFragment ) {
-            $xmlNodeList = $xpath->query( "/" . self::fragmentDocumentRoot );
+            $xmlNodeList = $xpath->query( "/" . self::FRAGMENT_DOCUMENT_ROOT );
         } else {
             $xmlNodeList = $xpath->query( "*" );
         }
