@@ -1,6 +1,10 @@
 .idea
 .php_cs.cache
 .phpunit.result.cache
+.phpunit.cache
 composer.lock
 vendor
-composer.phar
+tests/files/uber/output
+tests/files/output
+coverage-report
+composer*.phar

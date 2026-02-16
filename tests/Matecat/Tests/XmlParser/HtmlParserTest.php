@@ -7,19 +7,26 @@
  *
  */
 
-namespace Matecat\XmlParser\Tests;
+declare(strict_types=1);
 
+namespace Matecat\Tests\XmlParser;
+
+use DOMException;
+use Matecat\XmlParser\Exception\InvalidXmlException;
 use Matecat\XmlParser\Exception\XmlParsingException;
 use Matecat\XmlParser\HtmlParser;
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
-class HtmlParserTest extends TestCase {
+class HtmlParserTest extends Base {
 
     /**
-     * @test
+     * @throws InvalidXmlException
+     * @throws DOMException
+     * @throws XmlParsingException
      */
-    public function can_parse_a_valid_html5_page() {
-        $string = file_get_contents( __DIR__ . '/files/page.html' );
+    #[Test]
+    public function can_parse_a_valid_html5_page(): void {
+        $string = $this->getTestFile( 'page.html' );
         $parsed = HtmlParser::parse( $string );
 
         $this->assertCount( 1, $parsed );
@@ -38,9 +45,12 @@ class HtmlParserTest extends TestCase {
     }
 
     /**
-     * @test
+     * @throws InvalidXmlException
+     * @throws DOMException
+     * @throws XmlParsingException
      */
-    public function can_parse_html_with_greater_than_symbol() {
+    #[Test]
+    public function can_parse_html_with_greater_than_symbol(): void {
         $string = '<div id="1">Ciao > ciao<div id="2"></div></div>';
         $parsed = HtmlParser::parse( $string, true );
 
@@ -51,9 +61,11 @@ class HtmlParserTest extends TestCase {
     }
 
     /**
-     * @test
+     * @throws InvalidXmlException
+     * @throws DOMException
      */
-    public function can_not_parse_an_invalid_html() {
+    #[Test]
+    public function can_not_parse_an_invalid_html(): void {
         $string = '<div id="1">< Ciao <<div id="2"></div></div>';
 
         $this->expectException( XmlParsingException::class );
@@ -63,9 +75,12 @@ class HtmlParserTest extends TestCase {
 
 
     /**
-     * @test
+     * @throws InvalidXmlException
+     * @throws DOMException
+     * @throws XmlParsingException
      */
-    public function can_parse_html_with_greater_than_and_less_than_encoded_symbols() {
+    #[Test]
+    public function can_parse_html_with_greater_than_and_less_than_encoded_symbols(): void {
         $string = '<div id="1">Ciao &lt;> ciao<div id="2"></div></div>';
         $parsed = HtmlParser::parse( $string, true );
 
@@ -76,9 +91,12 @@ class HtmlParserTest extends TestCase {
     }
 
     /**
-     * @test
+     * @throws InvalidXmlException
+     * @throws DOMException
+     * @throws XmlParsingException
      */
-    public function can_parse_html_with_greater_than_and_less_than_symbols_in_inversed_order() {
+    #[Test]
+    public function can_parse_html_with_greater_than_and_less_than_symbols_in_inversed_order(): void {
         $string = '<div id="1">Ciao > &lt; ciao<div id="2"></div></div>';
         $parsed = HtmlParser::parse( $string, true );
 
@@ -89,9 +107,12 @@ class HtmlParserTest extends TestCase {
     }
 
     /**
-     * @test
+     * @throws InvalidXmlException
+     * @throws DOMException
+     * @throws XmlParsingException
      */
-    public function can_extract_inner_text() {
+    #[Test]
+    public function can_extract_inner_text(): void {
         $string = '<div class=\'text\'>questo è un testo</div>';
         $parsed = HtmlParser::parse( $string, true );
 
@@ -102,9 +123,12 @@ class HtmlParserTest extends TestCase {
     }
 
     /**
-     * @test
+     * @throws InvalidXmlException
+     * @throws DOMException
+     * @throws XmlParsingException
      */
-    public function can_extract_inner_text_with_nested_html_content() {
+    #[Test]
+    public function can_extract_inner_text_with_nested_html_content(): void {
         $string = '<div class=\'text\'><div>ciao questo è un testo</div> con del contenuto html.</div>';
         $parsed = HtmlParser::parse( $string, true );
 
@@ -115,9 +139,12 @@ class HtmlParserTest extends TestCase {
     }
 
     /**
-     * @test
+     * @throws InvalidXmlException
+     * @throws DOMException
+     * @throws XmlParsingException
      */
-    public function can_parse_a_string_with_escaped_single_quotes() {
+    #[Test]
+    public function can_parse_a_string_with_escaped_single_quotes(): void {
         $string = '<div class=\'text\'></div>';
         $parsed = HtmlParser::parse( $string, true );
 
@@ -127,9 +154,12 @@ class HtmlParserTest extends TestCase {
     }
 
     /**
-     * @test
+     * @throws DOMException
+     * @throws InvalidXmlException
+     * @throws XmlParsingException
      */
-    public function can_parse_a_string_with_escaped_double_quotes() {
+    #[Test]
+    public function can_parse_a_string_with_escaped_double_quotes(): void {
         $string = '<div class="text"></div>';
         $parsed = HtmlParser::parse( $string, true );
 
@@ -138,9 +168,12 @@ class HtmlParserTest extends TestCase {
     }
 
     /**
-     * @test
+     * @throws InvalidXmlException
+     * @throws DOMException
+     * @throws XmlParsingException
      */
-    public function can_parse_a_string_containing_html() {
+    #[Test]
+    public function can_parse_a_string_containing_html(): void {
         $string = 'Testo libero contenente &lt;ph id="mtc_1" equiv-text="base64:Jmx0O3BjIGlkPSIxIiBjYW5Db3B5PSJubyIgY2FuRGVsZXRlPSJubyIgZGF0YVJlZkVuZD0iZDEiIGRhdGFSZWZTdGFydD0iZDEiJmd0Ow=="/&gt;corsivo&lt;ph id="mtc_2" equiv-text="base64:Jmx0Oy9wYyZndDs="/&gt;, &lt;ph id="mtc_3" equiv-text="base64:Jmx0O3BjIGlkPSIyIiBjYW5Db3B5PSJubyIgY2FuRGVsZXRlPSJubyIgZGF0YVJlZkVuZD0iZDIiIGRhdGFSZWZTdGFydD0iZDIiJmd0Ow=="/&gt;grassetto&lt;ph id="mtc_4" equiv-text="base64:Jmx0Oy9wYyZndDs="/&gt;, &lt;ph id="mtc_5" equiv-text="base64:Jmx0O3BjIGlkPSIzIiBjYW5Db3B5PSJubyIgY2FuRGVsZXRlPSJubyIgZGF0YVJlZkVuZD0iZDEiIGRhdGFSZWZTdGFydD0iZDEiJmd0Ow=="/&gt;&lt;ph id="mtc_6" equiv-text="base64:Jmx0O3BjIGlkPSI0IiBjYW5Db3B5PSJubyIgY2FuRGVsZXRlPSJubyIgZGF0YVJlZkVuZD0iZDIiIGRhdGFSZWZTdGFydD0iZDIiJmd0Ow=="/&gt;grassetto + corsivo&lt;ph id="mtc_7" equiv-text="base64:Jmx0Oy9wYyZndDs="/&gt;&lt;ph id="mtc_8" equiv-text="base64:Jmx0Oy9wYyZndDs="/&gt; e &lt;ph id="mtc_9" equiv-text="base64:Jmx0O3BjIGlkPSI1IiBjYW5Db3B5PSJubyIgY2FuRGVsZXRlPSJubyIgZGF0YVJlZkVuZD0iZDMiIGRhdGFSZWZTdGFydD0iZDMiJmd0Ow=="/&gt;larghezza fissa&lt;ph id="mtc_10" equiv-text="base64:Jmx0Oy9wYyZndDs="/&gt;.';
         $parsed = HtmlParser::parse( $string, true );
 
@@ -148,9 +181,12 @@ class HtmlParserTest extends TestCase {
     }
 
     /**
-     * @test
+     * @throws InvalidXmlException
+     * @throws DOMException
+     * @throws XmlParsingException
      */
-    public function can_parse_html() {
+    #[Test]
+    public function can_parse_html(): void {
         $html   = '<div class="row col-md-12" id="test">Ciao</div><div><h1 class="text-center">Title</h1><p>First p</p><p>Second p</p><p>Third p <span>with nested span</span></p></div>';
         $parsed = HtmlParser::parse( $html, true );
 
@@ -165,9 +201,12 @@ class HtmlParserTest extends TestCase {
     }
 
     /**
-     * @test
+     * @throws InvalidXmlException
+     * @throws DOMException
+     * @throws XmlParsingException
      */
-    public function can_parse_html_with_escaped_html() {
+    #[Test]
+    public function can_parse_html_with_escaped_html(): void {
         $html   = '&lt;div&gt;Ciao&lt;div&gt;Ciao&lt;/div&gt;&lt;/div&gt;';
         $parsed = HtmlParser::parse( $html, true );
 

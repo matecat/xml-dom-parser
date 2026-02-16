@@ -7,39 +7,41 @@
  *
  */
 
+declare(strict_types=1);
+
 namespace Matecat\XmlParser;
 
 use ArrayObject;
 use DOMException;
+use DOMNameSpaceNode;
+use DOMNode;
 use DOMNodeList;
 use DOMXPath;
 use Matecat\XmlParser\Exception\InvalidXmlException;
 use Matecat\XmlParser\Exception\XmlParsingException;
+use stdClass;
 
-class XmlParser extends AbstractParser {
+final class XmlParser extends AbstractParser {
 
     /**
      * This solution is taken from here and then modified:
      * https://www.php.net/manual/fr/regexp.reference.recursive.php#95568
      *
-     * @param string $xml
-     * @param bool   $isXmlFragment
-     *
-     * @return ArrayObject
+     * @return ArrayObject<int, stdClass>
      * @throws DOMException
      * @throws InvalidXmlException
      * @throws XmlParsingException
      */
-    public static function parse( $xml, $isXmlFragment = false ) {
-        $parser = new static( $xml, $isXmlFragment );
+    public static function parse( string $xml, bool $isXmlFragment = false ): ArrayObject {
+        $parser = new self( $xml, $isXmlFragment );
 
         return $parser->extractNodes();
     }
 
     /**
-     * @return DOMNodeList
+     * @return DOMNodeList<DOMNode|DOMNameSpaceNode>|false
      */
-    protected function getNodeListFromQueryPath(){
+    protected function getNodeListFromQueryPath(): DOMNodeList|false {
 
         $xpath = new DOMXPath( $this->dom );
 

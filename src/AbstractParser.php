@@ -7,6 +7,8 @@
  *
  */
 
+declare(strict_types=1);
+
 namespace Matecat\XmlParser;
 
 use ArrayObject;
@@ -18,13 +20,16 @@ use DOMNodeList;
 use DOMText;
 use Matecat\XmlParser\Exception\InvalidXmlException;
 use Matecat\XmlParser\Exception\XmlParsingException;
+use stdClass;
 
 abstract class AbstractParser {
 
-    const fragmentDocumentRoot = '_____root';
-    const regexpEntity         = '/&#x([0-1]{0,1}[0-9A-F]{1,2})/u'; //&#x1E;  &#xE;
-    const regexpAscii          = '/([\x{00}-\x{1F}\x{7F}]{1})/u';
-    protected static $asciiPlaceHoldMap = [
+    public const string fragmentDocumentRoot = '_____root';
+    public const string regexpEntity         = '/&#x([0-1]{0,1}[0-9A-F]{1,2})/u'; //&#x1E;  &#xE;
+    public const string regexpAscii          = '/([\x{00}-\x{1F}\x{7F}])/u';
+
+    /** @var array<string, array{symbol: string, placeHold: string, numeral: int}> */
+    protected static array $asciiPlaceHoldMap = [
             '00' => [ 'symbol' => 'NULL', 'placeHold' => '', 'numeral' => 0x00 ],
             '01' => [ 'symbol' => 'SOH', 'placeHold' => '', 'numeral' => 0x01 ],
             '02' => [ 'symbol' => 'STX', 'placeHold' => '', 'numeral' => 0x02 ],
@@ -57,26 +62,23 @@ abstract class AbstractParser {
             '1D' => [ 'symbol' => 'GS', 'placeHold' => '', 'numeral' => 0x1D ],
             '1E' => [ 'symbol' => 'RS', 'placeHold' => '', 'numeral' => 0x1E ],
             '1F' => [ 'symbol' => 'US', 'placeHold' => '', 'numeral' => 0x1F ],
-            '7F' => [ 'symbol' => 'DEL', 'placeHold' => '', 'numeral' => 0x7F ],
+            '7F' => [ 'symbol' => 'DEL', 'placeHold' => '', 'numeral' => 0x7F ]
     ];
 
-    /**
-     * @var string
-     */
-    protected $isXmlFragment;
+    protected bool $isXmlFragment;
+
+    protected DOMDocument $dom;
 
     /**
-     * @var DOMDocument
+     * @var ArrayObject<int, stdClass>
      */
-    protected $dom;
-
-    protected $elements;
+    protected ArrayObject $elements;
 
     /**
      * @throws InvalidXmlException
      * @throws XmlParsingException
      */
-    protected function __construct( $xml, $isXmlFragment, $isHtml = false ) {
+    protected function __construct( string $xml, bool $isXmlFragment, bool $isHtml = false ) {
         $xml                 = $this->removeNotPrintableChars( $xml );
         $this->isXmlFragment = $isXmlFragment;
 
@@ -95,12 +97,8 @@ abstract class AbstractParser {
     /**
      * We replace not printable chars with a placeholder.
      * This because DomDocument cannot handle not printable chars
-     *
-     * @param $seg
-     *
-     * @return string
      */
-    protected function removeNotPrintableChars( $seg ) {
+    protected function removeNotPrintableChars( string $seg ): string {
 
         preg_match_all( self::regexpAscii, $seg, $matches );
 
@@ -141,16 +139,21 @@ abstract class AbstractParser {
     }
 
     /**
-     * @param DOMNodeList $elementList
-     * @param ArrayObject $elements
-     *
-     * @return ArrayObject
+     * @param DOMNodeList<DOMNode> $elementList
+     * @param ArrayObject<int, stdClass> $elements
+     * @return ArrayObject<int, stdClass>
      */
-    protected function mapElements( DOMNodeList $elementList, ArrayObject $elements ) {
+    protected function mapElements( DOMNodeList $elementList, ArrayObject $elements ): ArrayObject {
 
         for ( $i = 0; $i < $elementList->length; $i++ ) {
 
             $element = $elementList->item( $i );
+
+            if ( $element === null ) {
+                // This is defensive code, DOMNodeList::item() returns null only
+                // when the index is out of bounds, which shouldn't happen in a for loop iterating over $elementList->length.
+                continue; // @codeCoverageIgnore
+            }
 
             $elements[] = (object)[
                     'node'         => $this->dom->saveXML( $element ),
@@ -169,11 +172,9 @@ abstract class AbstractParser {
     }
 
     /**
-     * @param DOMNode $element
-     *
-     * @return array
+     * @return array<string, string|null>
      */
-    protected function getAttributes( DOMNode $element ) {
+    protected function getAttributes( DOMNode $element ): array {
 
         if ( !$element->hasAttributes() ) {
             return [];
@@ -193,20 +194,21 @@ abstract class AbstractParser {
     }
 
     /**
-     * @return ArrayObject
+     * @return ArrayObject<int, stdClass>
      * @throws DOMException
      */
-    protected function extractNodes() {
+    protected function extractNodes(): ArrayObject {
 
         $htmlNodeList = $this->getNodeListFromQueryPath();
 
         if ( !$htmlNodeList instanceof DOMNodeList ) {
-            throw new DOMException( 'Bad DOMNodeList' );
+            throw new DOMException( 'Bad DOMNodeList' ); // @codeCoverageIgnore
         }
 
-        if ( $this->isXmlFragment && $htmlNodeList->item( 0 )->nodeName == self::fragmentDocumentRoot ) {
+        $firstNode = $htmlNodeList->item( 0 );
+        if ( $this->isXmlFragment && $firstNode !== null && $firstNode->nodeName == self::fragmentDocumentRoot ) {
             // there is a fake root node, skip the first element end start with child nodes
-            $this->mapElements( $htmlNodeList->item( 0 )->childNodes, $this->elements );
+            $this->mapElements( $firstNode->childNodes, $this->elements );
         } else {
             $this->mapElements( $htmlNodeList, $this->elements );
         }
@@ -216,8 +218,8 @@ abstract class AbstractParser {
     }
 
     /**
-     * @return DOMNodeList
+     * @return DOMNodeList<DOMNode>|false
      */
-    abstract protected function getNodeListFromQueryPath();
+    abstract protected function getNodeListFromQueryPath(): DOMNodeList|false;
 
 }

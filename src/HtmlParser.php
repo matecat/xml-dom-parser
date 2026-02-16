@@ -7,49 +7,53 @@
  *
  */
 
+declare(strict_types=1);
+
 namespace Matecat\XmlParser;
 
 use ArrayObject;
 use DOMException;
+use DOMNameSpaceNode;
+use DOMNode;
+use DOMNodeList;
 use DOMXPath;
 use Matecat\XmlParser\Exception\InvalidXmlException;
 use Matecat\XmlParser\Exception\XmlParsingException;
+use stdClass;
 
-class HtmlParser extends AbstractParser {
+final class HtmlParser extends AbstractParser
+{
 
     /**
      * This solution is taken from here and then modified:
      * https://www.php.net/manual/fr/regexp.reference.recursive.php#95568
      *
-     * @param string $xml
-     * @param bool   $isXmlFragment
-     *
-     * @return ArrayObject
+     * @return ArrayObject<int, stdClass>
      * @throws DOMException
      * @throws InvalidXmlException
      * @throws XmlParsingException
      */
-    public static function parse( $xml, $isXmlFragment = false ) {
-        $parser = new static( $xml, $isXmlFragment, true );
+    public static function parse(string $xml, bool $isXmlFragment = false): ArrayObject
+    {
+        $parser = new self($xml, $isXmlFragment, true);
 
         return $parser->extractNodes();
     }
 
     /**
-     * @return ArrayObject
+     * @return DOMNodeList<DOMNode|DOMNameSpaceNode>|false
      */
-    protected function getNodeListFromQueryPath() {
+    protected function getNodeListFromQueryPath(): DOMNodeList|false
+    {
+        $xpath = new DOMXPath($this->dom);
 
-        $xpath = new DOMXPath( $this->dom );
-
-        if ( $this->isXmlFragment ) {
-            $htmlNodeList = $xpath->query( "/" . self::fragmentDocumentRoot );
+        if ($this->isXmlFragment) {
+            $htmlNodeList = $xpath->query("/" . self::fragmentDocumentRoot);
         } else {
-            $htmlNodeList = $xpath->query( "/html" );
+            $htmlNodeList = $xpath->query("/html");
         }
 
         return $htmlNodeList;
-
     }
 
 }

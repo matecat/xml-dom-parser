@@ -1,0 +1,9 @@
+parameters:
+    level: 7
+    paths:
+        - src
+        - tests
+    ignoreErrors:
+        # False positive: Static property with array shape PHPDoc rejects numeric string keys
+        # @See https://github.com/phpstan/phpstan/issues/14131
+        - '#Static property .+::\$asciiPlaceHoldMap .+ does not accept default value of type#'

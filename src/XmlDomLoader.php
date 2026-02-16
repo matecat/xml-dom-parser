@@ -7,6 +7,8 @@
  *
  */
 
+declare(strict_types=1);
+
 namespace Matecat\XmlParser;
 
 use DOMDocument;
@@ -14,7 +16,6 @@ use Exception;
 use Matecat\XmlParser\Exception\InvalidXmlException;
 use Matecat\XmlParser\Exception\XmlParsingException;
 use RuntimeException;
-use const PHP_VERSION_ID;
 
 /**
  * This class is copied from Symfony\Component\Config\Util\XmlUtils:
@@ -22,7 +23,7 @@ use const PHP_VERSION_ID;
  * Please see:
  * https://github.com/symfony/config/blob/v4.0.0/Util/XmlUtils.php
  */
-class XmlDomLoader {
+final class XmlDomLoader {
     /**
      * Parses an XML string.
      *
@@ -34,9 +35,9 @@ class XmlDomLoader {
      * @throws InvalidXmlException When parsing of XML with schema or callable produces any errors unrelated to the XML parsing itself
      * @throws XmlParsingException When parsing of XML file returns error
      */
-    public static function load( $content, Config $config = null ) {
+    public static function load( string $content, ?Config $config = null ): DOMDocument {
         if ( !extension_loaded( 'dom' ) ) {
-            throw new RuntimeException( 'Extension DOM is required.' );
+            throw new RuntimeException( 'Extension DOM is required.' ); // @codeCoverageIgnore
         }
 
         if ( is_null( $config ) ) {
@@ -56,7 +57,7 @@ class XmlDomLoader {
         $res = $dom->loadXML( $content, $config->getXML_OPTIONS() );
 
         if ( !$res ) {
-            throw new XmlParsingException( implode( "\n", static::getXmlErrors( $internalErrors ) ) );
+            throw new XmlParsingException( implode( "\n", self::getXmlErrors( $internalErrors ) ) );
         }
 
         $dom->normalizeDocument();
@@ -80,9 +81,15 @@ class XmlDomLoader {
                 } catch ( Exception $e ) {
                     $valid = false;
                 }
-            } elseif ( !is_array( $config->getSchemaOrCallable() ) && is_file( (string)$config->getSchemaOrCallable() ) ) {
-                $schemaSource = file_get_contents( (string)$config->getSchemaOrCallable() );
-                $valid        = @$dom->schemaValidateSource( $schemaSource );
+            } elseif ( is_file( $config->getSchemaOrCallable() ) ) {
+                $schemaSource = file_get_contents( $config->getSchemaOrCallable() );
+                // @codeCoverageIgnoreStart
+                if ( $schemaSource === false ) {
+                    libxml_use_internal_errors( $internalErrors );
+                    throw new XmlParsingException( 'Could not read schema file.' );
+                }
+                // @codeCoverageIgnoreEnd
+                $valid = @$dom->schemaValidateSource( $schemaSource );
             } else {
                 libxml_use_internal_errors( $internalErrors );
 
@@ -90,7 +97,7 @@ class XmlDomLoader {
             }
 
             if ( !$valid ) {
-                $messages = static::getXmlErrors( $internalErrors );
+                $messages = self::getXmlErrors( $internalErrors );
                 if ( empty( $messages ) ) {
                     throw new InvalidXmlException( 'The XML is not valid.', 0, $e );
                 }
@@ -105,11 +112,9 @@ class XmlDomLoader {
     }
 
     /**
-     * @param $internalErrors
-     *
-     * @return array
+     * @return array<int, string>
      */
-    private static function getXmlErrors( $internalErrors ) {
+    private static function getXmlErrors( bool $internalErrors ): array {
         $errors = [];
         foreach ( libxml_get_errors() as $error ) {
             $errors[] = sprintf(

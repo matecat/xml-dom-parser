@@ -7,62 +7,47 @@
  *
  */
 
+declare(strict_types=1);
+
 namespace Matecat\XmlParser;
+
+use Closure;
 
 /**
  *
  */
-class Config {
+readonly class Config {
 
-    /**
-     * @var bool
-     */
-    protected $allowDocumentType = false;
-    /**
-     * @var string|null
-     */
-    protected $setRootElement = null;
-    /**
-     * @var string|callable|null
-     */
-    protected $schemaOrCallable = null;
-    /**
-     * @var int
-     */
-    protected $XML_OPTIONS = 0;
+    protected bool $allowDocumentType;
+    protected ?string $setRootElement;
+    protected Closure|string|null $schemaOrCallable;
+    protected int $XML_OPTIONS;
 
-    public function __construct( $setRootElement = null, $allowDocumentType = false, $XML_OPTIONS = 0, $schemaOrCallable = null ) {
+    public function __construct(
+        ?string $setRootElement = null,
+        bool $allowDocumentType = false,
+        int $XML_OPTIONS = 0,
+        Closure|string|null $schemaOrCallable = null
+    ) {
         $this->XML_OPTIONS       = $XML_OPTIONS | ( defined( 'LIBXML_COMPACT' ) ? LIBXML_COMPACT : 0 );
         $this->setRootElement    = $setRootElement;
         $this->allowDocumentType = $allowDocumentType;
         $this->schemaOrCallable  = $schemaOrCallable;
     }
 
-    /**
-     * @return bool|mixed
-     */
-    public function getAllowDocumentType() {
+    public function getAllowDocumentType(): bool {
         return $this->allowDocumentType;
     }
 
-    /**
-     * @return mixed|string|null
-     */
-    public function getSetRootElement() {
+    public function getSetRootElement(): ?string {
         return $this->setRootElement;
     }
 
-    /**
-     * @return callable|mixed|string|null
-     */
-    public function getSchemaOrCallable() {
+    public function getSchemaOrCallable(): Closure|string|null {
         return $this->schemaOrCallable;
     }
 
-    /**
-     * @return int
-     */
-    public function getXML_OPTIONS() {
+    public function getXML_OPTIONS(): int {
         return $this->XML_OPTIONS;
     }
 

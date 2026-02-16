@@ -1,2 +1,7 @@
 [![Build Status](https://app.travis-ci.com/matecat/xml-dom-parser.svg?token=qBazxkHwP18h3EWnHjjF&branch=master)](https://app.travis-ci.com/matecat/xml-dom-parser)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/matecat/xml-dom-parser/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/matecat/xml-dom-parser/?branch=master)
+[![license](https://img.shields.io/github/license/matecat/xml-dom-parser.svg)]()
+[![Packagist](https://img.shields.io/packagist/v/matecat/xml-dom-parser.svg)]()
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=matecat_xml-dom-parser&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=matecat_xml-dom-parser)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=matecat_xml-dom-parser&metric=coverage)](https://sonarcloud.io/summary/new_code?id=matecat_xml-dom-parser)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=matecat_xml-dom-parser&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=matecat_xml-dom-parser)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=matecat_xml-dom-parser&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=matecat_xml-dom-parser)
