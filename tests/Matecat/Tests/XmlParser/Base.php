@@ -20,14 +20,18 @@ abstract class Base extends TestCase
 
     protected function markTestSkippedInCoverage(): void
     {
-        $isCoverage = (bool)count(array_filter($_SERVER['argv'], fn($arg) => str_contains($arg, 'coverage') && !str_contains($arg, 'no-coverage')));
+        $isCoverage = (bool)count(
+            array_filter(
+                $_SERVER['argv'],
+                fn($arg) => str_contains($arg, 'coverage') && !str_contains($arg, 'no-coverage')
+            )
+        );
 
         if ($isCoverage) {
             $this->markTestSkipped(
                 'This test is very expensive when coverage is enabled.',
             );
         }
-
     }
 
 }

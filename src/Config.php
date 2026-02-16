@@ -16,7 +16,8 @@ use Closure;
 /**
  *
  */
-readonly class Config {
+readonly class Config
+{
 
     protected bool $allowDocumentType;
     protected ?string $setRootElement;
@@ -29,25 +30,29 @@ readonly class Config {
         int $xmlOptions = 0,
         Closure|string|null $schemaOrCallable = null
     ) {
-        $this->xmlOptions       = $xmlOptions | ( defined( 'LIBXML_COMPACT' ) ? LIBXML_COMPACT : 0 );
-        $this->setRootElement    = $setRootElement;
+        $this->xmlOptions = $xmlOptions | (defined('LIBXML_COMPACT') ? LIBXML_COMPACT : 0);
+        $this->setRootElement = $setRootElement;
         $this->allowDocumentType = $allowDocumentType;
-        $this->schemaOrCallable  = $schemaOrCallable;
+        $this->schemaOrCallable = $schemaOrCallable;
     }
 
-    public function getAllowDocumentType(): bool {
+    public function getAllowDocumentType(): bool
+    {
         return $this->allowDocumentType;
     }
 
-    public function getSetRootElement(): ?string {
+    public function getSetRootElement(): ?string
+    {
         return $this->setRootElement;
     }
 
-    public function getSchemaOrCallable(): Closure|string|null {
+    public function getSchemaOrCallable(): Closure|string|null
+    {
         return $this->schemaOrCallable;
     }
 
-    public function getXmlOptions(): int {
+    public function getXmlOptions(): int
+    {
         return $this->xmlOptions;
     }
 

@@ -16,10 +16,12 @@ use Exception;
 /**
  * @internal
  */
-final readonly class ValidationResult {
+final readonly class ValidationResult
+{
     public function __construct(
         public bool $isValid,
         public ?Exception $exception
-    ) {}
+    ) {
+    }
 }
 
